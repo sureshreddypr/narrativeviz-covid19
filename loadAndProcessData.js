@@ -8,7 +8,7 @@ export const loadAndProcessData = () =>
   .then( ([unData, topoJSONdata]) => {
      console.log(unData);
   	const rowById = unData.reduce((accumulator, d) => {
-    	accumulator[d['Country code']] = d;
+    	accumulator[d['Country Name']] = d;
       return accumulator;
     }, {})
     const countries = feature(topoJSONdata, 
