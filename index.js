@@ -69,11 +69,11 @@ loadAndProcessData().then(countries => {
     .enter().append('path')
       .attr('class', 'country')
       .attr('d', pathGenerator)
-      .attr('fill', d => d.properties['2018'] ? '#b59d70' : '#b34f44')
+      .attr('fill', d => d.properties['location'] ? '#b59d70' : '#b34f44')
     .append('title')
       .text(d => isNaN(radiusValue(d)) 
               ? 'No cases reported' 
-              : [d.properties['Region, subregion, country or area *'], 
+              : [d.properties['location'], 
                     populationFormat(radiusValue(d))
                    ].join(': '))
   
