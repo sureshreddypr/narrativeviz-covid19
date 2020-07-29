@@ -6,7 +6,7 @@ export const loadAndProcessData = () =>
 	.all([csv('https://github.com/sureshreddypr/narrativeviz-covid19/covid19_full_data_jul272020.csv'),
       json('https://unpkg.com/visionscarto-world-atlas@0.0.4/world/50m.json')])
   .then( ([unData, topoJSONdata]) => {
-    // console.log(unData);
+     console.log(unData);
   	const rowById = unData.reduce((accumulator, d) => {
     	accumulator[d['Country code']] = d;
       return accumulator;
