@@ -3,7 +3,7 @@ import { csv, json } from 'd3'
 
 export const loadAndProcessData = () => 
 	Promise
-	.all([csv('https://vizhub.com/curran/datasets/un-population-estimates-2017-medium-variant.csv'),
+	.all([csv('https://github.com/sureshreddypr/narrativeviz-covid19/covid19_full_data_jul272020.csv'),
       json('https://unpkg.com/visionscarto-world-atlas@0.0.4/world/50m.json')])
   .then( ([unData, topoJSONdata]) => {
     // console.log(unData);
@@ -25,7 +25,7 @@ export const loadAndProcessData = () =>
     const featuresWithPopulation = countries.features
     	.filter(d => d.properties['2018'])
       .map(d => {
-        d.properties['2018'] = +d.properties['2018'].replace(/ /g, '') * 1000;
+        d.properties['2020'] = +d.properties['2020'].replace(/ /g, '') * 1000;
         return d;
       })
     
