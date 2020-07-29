@@ -72,7 +72,7 @@ loadAndProcessData().then(countries => {
       .attr('fill', d => d.properties['2018'] ? '#b59d70' : '#b34f44')
     .append('title')
       .text(d => isNaN(radiusValue(d)) 
-              ? 'missing' 
+              ? 'No cases reported' 
               : [d.properties['Region, subregion, country or area *'], 
                     populationFormat(radiusValue(d))
                    ].join(': '))
