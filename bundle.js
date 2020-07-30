@@ -3,7 +3,7 @@
 
   const loadAndProcessData = () => 
   	Promise
-  	.all([d3.csv('https://vizhub.com/curran/datasets/un-population-estimates-2017-medium-variant.csv'),
+  	.all([d3.csv('/sureshreddypr.github.io/narrativeviz-covid19/covid19_full_data_jul272020.csv'),
         d3.json('https://unpkg.com/visionscarto-world-atlas@0.0.4/world/50m.json')])
     .then( ([unData, topoJSONdata]) => {
       // console.log(unData);
