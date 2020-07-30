@@ -75,7 +75,7 @@
             }
         }
         
-        d3.csv("/narrativeviz-covid19/countries_geographic_coordinates.csv", function(d) {
+        d3.csv("/sureshreddypr.github.io/narrativeviz-covid19/countries_geographic_coordinates.csv", function(d) {
               d['latitude'] = +d['latitude'];
               d['longitude'] = +d['longitude'];
               return d;
@@ -257,7 +257,7 @@
 
         var format = d3.time.format("%Y-%m-%d");
         var monthyear = d3.time.format("%b-%Y");
-        d3.tsv("/narrativeviz-covid19/covid19_full_data_jul272020.csv", function(d) {
+        d3.tsv("/sureshreddypr.github.io/narrativeviz-covid19/covid19_full_data_jul272020.csv", function(d) {
           d['date'] = format.parse(d['date']);
           d['monthyear'] = monthyear(d['date']);
           d['total_cases'] = +d['total_cases'];
@@ -272,7 +272,7 @@
   </head>
 <body>
   <script>
-    d3.json("/narrativeviz-covid19/world_countries.json", draw);
+    d3.json("/sureshreddypr.github.io/narrativeviz-covid19/world_countries.json", draw);
   </script>  
 </body>
 </html>
