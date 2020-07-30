@@ -1,0 +1,278 @@
+<html>
+<head>
+<title>Covid Narrative</title>
+  <meta charset="utf-8">
+  <script src="https://d3js.org/d3.v3.min.js"></script>
+    <style>
+         body {
+          font: 10px sans-serif;
+        }
+
+        div.tooltip {	
+        position: absolute;			
+        text-align: center;			
+        width: 150px;					
+        height: 70px;					
+        padding: 2px;				
+        font: 12px sans-serif;		
+        background: lightsteelblue;	
+        border: 0px;		
+        border-radius: 8px;			
+        pointer-events: none;	
+}
+    </style>
+    <script type="text/javascript">
+      function draw(geo_data) {
+        "use strict";
+        var margin = 75,
+            width = 1400 - margin,
+            height = 500 - margin;
+        
+        var header_div = d3.select("body")
+            .append("div")
+            .attr("id","header")
+            .attr("width", width-margin)
+            .attr("style","text-align: center;vertical-align: middle;");
+        
+        var content = d3.select("body")
+            .append("div")
+            .attr("id","content")
+            .attr("width", width-margin)
+            .attr("style","text-align: center;vertical-align: middle;"); 
+
+        var legend = d3.select("body")
+            .append("div")
+            .attr("id","legend")
+            .attr("width", width-margin)
+            .attr("style","text-align: center;vertical-align: middle;");               
+            
+        var svg = d3.select("body")
+            .append("svg")
+            .attr("width", width + margin)
+            .attr("height", height + margin)
+            .append('g')
+            .attr('class', 'map');
+
+        var projection = d3.geo.mercator()
+                               .scale(140)
+                               .translate([width / 2, height / 1.2]);
+
+        var path = d3.geo.path().projection(projection);
+
+        var map = svg.selectAll('path')
+                     .data(geo_data.features)
+                     .enter()
+                     .append('path')
+                     .attr('d', path)
+                     .style('fill', 'lightBlue')
+                     .style('stroke', 'black')
+                     .style('stroke-width', 0.5);
+        
+        var countries_coordinates = new Map();
+        function set_countries_coordinates(data) {
+            for(var index in data) {
+                countries_coordinates.set(data[index].name, [data[index].longitude, data[index].latitude]);
+            }
+        }
+        
+        d3.csv("countries_geographic_coordinates.csv", function(d) {
+              d['latitude'] = +d['latitude'];
+              d['longitude'] = +d['longitude'];
+              return d;
+            }, set_countries_coordinates);
+        
+        function plot_points(data) {
+            var global_total_cases =0;
+            var global_total_deaths=0;
+            function agg_cases_count(leaves) {
+                var total_new_cases = d3.sum(leaves, function(d) {
+                    return d['new_cases'];
+                });
+                if(leaves[0]['location'] != 'World') {
+                    global_total_cases = global_total_cases + global_new_cases;
+                }
+                
+                var total_deaths = d3.sum(leaves, function(d) {
+                    return d['new_deaths'];
+                });
+                if(leaves[0]['location'] != 'World') {
+                    global_total_deaths = global_total_deaths + total_deaths;
+                }
+                
+                var coords = leaves.map(function(d) {
+                    var cord_x = 0;
+                    var cord_y = 0;
+                    if(countries_coordinates.get(leaves[0]['location']) != null) {
+                        cord_x = countries_coordinates.get(leaves[0]['location'])[0];
+                        cord_y = countries_coordinates.get(leaves[0]['location'])[1];
+                    }
+                    
+                    return projection([+cord_x, +cord_y]);
+                });
+                var center_x = d3.mean(coords, function(d) {
+                    return d[0];
+                });
+                var center_y = d3.mean(coords, function(d) {
+                    return d[1];
+                });
+                return {
+                  'location' : leaves[0]['location'],
+                  'total_new_cases' : total_new_cases,
+                  'total_deaths' : total_deaths,
+                  'x' : center_x,
+                  'y' : center_y
+                };
+            }
+            
+            function header_content(global_total_cases, global_total_deaths) {
+                var header_html = "<span style='font-size:60;'>World Covid Cases</span>" + "<br/>"
+                    + "<span style='font-size:30;'>Total cases:</span><span style='font-size:30;color:red;'>" + global_total_cases 
+                    + "</span><span style='font-size:30;'>, Total deaths:</span><span style='font-size:30;color:red;'>" + global_total_deaths+"</span><br/>";
+                return header_html +"<br>";
+            }
+            
+            function map_legend() {
+                return "<br><br><div style='border-radius:50%;background-color:red;width:20px;height:20px;display:inline-block;position:absolute;'></div><span style='font-size:20;padding:20px;'>&nbsp;Total cases &gt; China</span>"
+                +"<div style='border-radius:50%;background-color:blue;width:20px;height:20px;display:inline-block;position:absolute;'></div><span style='font-size:20;padding:20px;'>&nbsp;China</span>"
+                            +"<div style='border-radius:50%;background-color:yellow;width:20px;height:20px;display:inline-block;position:absolute;'></div><span style='font-size:20;padding:20px;'>&nbsp;Remaining Countries</span>";
+                
+            }
+            
+            var raw_nested = d3.nest()
+                           .key(function(d) {
+                              return d['location'];
+                           })
+                           .rollup(agg_cases_count)
+                           .entries(data);
+                           
+            // display header & content
+            d3.select("#header").html(header_content(global_total_cases, global_total_deaths));
+            
+            d3.select("#content").html("<span style='font-size:15;'>The <b>COVID-19 pandemic</b>, also known as the <b>coronavirus pandemic</b>, is an ongoing global "
+            +"pandemic of coronavirus disease 2019 (COVID-19), caused by severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2)."
+            +" The outbreak was first identified in Wuhan, China, in December 2019. "
+            +"The World Health Organization declared the outbreak a Public Health Emergency of International Concern on 30 January 2020 and a pandemic on 11 March."
+            +"To learn more about Covid19<a href='https://en.wikipedia.org/wiki/COVID-19_pandemic'>click here</a><br><br>"
+            +"Below map displays countries impacted by COVID-19 cases. Countries with total covid cases greater than China are circled in <span style='background-color:#ddd;color:red;'>RED</span>, China(Outbreak Originator) is circle in <span style='background-color:#ddd;color:blue;'>BLUE</span>"
+            +"and remaining countries are marked in <span style='background-color:#ddd;color:yellow;'>YELLOW</span>. Actual figures about total cases and deaths can be seen by hovering over the circles. <br><br>"
+            +"To see side by side comparison of total Covid19 cases and total deaths until July 17th, 2020 in these countries, click on NEXT below."
+            +"<br><span style='background-color:#32CD32;font-weight:bold;font-size:20px;'><a href='/pradeep8.github.io/covid2.html'>Next</a></span>");
+            
+            d3.select("#legend").html(map_legend());
+            
+            // display map
+            var nested = [];
+            var world_countries_cases = [];
+            var chn_total_cases = 0;
+            for(var rn in raw_nested) {
+                if((raw_nested[rn].values.x !=0 && raw_nested[rn].values.y != 0) && raw_nested[rn].values.location != 'World') {
+                    nested.push(raw_nested[rn]);
+                    world_countries_cases.push(raw_nested[rn].values.total_new_cases);
+                    
+                    if(raw_nested[rn].values.location === 'China') {
+                        chn_total_cases = raw_nested[rn].values.total_new_cases;
+                    }
+                }
+            }
+            //var top_20_countries = world_countries_cases.sort((a,b) => b-a).slice(0,10);
+            var top_20_countries=  [];
+            for(var c in world_countries_cases) {
+                if(world_countries_cases[c]>=chn_total_cases) {
+                    top_20_countries.push(world_countries_cases[c]);
+                }
+            }
+            
+            
+            var total_world_max_new_cases = d3.max(nested, function(d) {
+                return d.values['total_new_cases'];
+            });
+            
+            var radius = d3.scale.sqrt()
+                           .domain([0, total_world_max_new_cases])
+                           .range([0, 15]);
+            var red_color = d3.scale.linear()
+                           .domain([Math.min.apply(Math,top_20_countries), Math.max.apply(Math,top_20_countries)])  
+                           .range(['rgb(249, 153, 153)','rgb(255, 6, 6)']); 
+            var yellow_color = d3.scale.linear()
+                           .domain([0, total_world_max_new_cases])  
+                           .range(['rgb(252, 249, 179)','rgb(249, 241, 4)']); 
+            var blue_color = d3.scale.linear()
+                           .domain([0, total_world_max_new_cases])  
+                           .range(['rgb(6, 68, 173)','rgb(6, 68, 173)']); 
+            var div = d3.select("body").append("div")	
+                        .attr("class", "tooltip")				
+                        .style("opacity", 0);
+                        
+            svg.append('g')
+               .attr("class", "bubble")
+               .selectAll("circle")
+               .data(nested)
+               .enter()
+               .append("circle")
+               .on("mouseover", function(d) {
+                    div.transition()		
+                        .duration(200)		
+                        .style("opacity", .9);		
+                    return div.html(d.values['location'] + "<br/>"+ "----------------------------" + "<br/>Total Cases:"+d.values['total_new_cases']+"<br/>Total Deaths:"+d.values['total_deaths'])
+                        .style("top", (d3.event.pageY) + "px")
+                        .style("left", (d3.event.pageX) + "px");	
+                    
+                })
+               .on("mouseout", function(d) {		
+                    div.transition()		
+                        .duration(500)		
+                        .style("opacity", 0);	
+                })
+               .attr('cx', function(d) { return d.values['x']; })
+               .attr('cy', function(d) { return d.values['y']; })
+               .attr('r', function(d) {
+                    return radius(d.values['total_new_cases']);
+               })
+               .attr('fill', function(d) { 
+                            if(top_20_countries.includes(d.values['total_new_cases'])) {
+                                if(d.values['location'] === 'China') {
+                                    return blue_color(d.values['total_new_cases']);
+                                } else {
+                                    return red_color(d.values['total_new_cases']);
+                                }
+                            } else {
+                                return yellow_color(d.values['total_new_cases']);
+                            }
+                        }
+                    )
+               .attr('stroke', function(d) { 
+                            if(top_20_countries.includes(d.values['total_new_cases'])) {
+                                if(d.values['location'] === 'China') {
+                                    return "blue";
+                                } else {
+                                    return "red";
+                                }
+                            } else {
+                                return "yellow";
+                            }
+                        })
+               .attr('stroke-width', 0.7)
+               .attr('opacity', 0.7);
+        }
+
+        var format = d3.time.format("%Y-%m-%d");
+        var monthyear = d3.time.format("%b-%Y");
+        d3.tsv("covid19_full_data_jul272020.csv", function(d) {
+          d['date'] = format.parse(d['date']);
+          d['monthyear'] = monthyear(d['date']);
+          d['total_cases'] = +d['total_cases'];
+          d['new_cases'] = +d['new_cases'];
+          d['total_deaths'] = +d['total_deaths'];
+          d['new_deaths'] = +d['new_deaths'];
+          d['population'] = +d['population'];
+          return d;
+        }, plot_points);
+      };
+      </script>
+  </head>
+<body>
+  <script>
+    d3.json("world_countries.json", draw);
+  </script>  
+</body>
+</html>
